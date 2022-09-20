@@ -1,20 +1,18 @@
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume, ISimpleAudioVolume
 
 MAX = 5.0
 MIN = -60
 
-devices = AudioUtilities.GetAllSessions()
-for dev in devices:
-    print(dev)
-# interface = devices.Activate(
-#     IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-# volume = cast(interface, POINTER(IAudioEndpointVolume))
-# volume.GetMute()
-# volume.GetMasterVolumeLevel()
-# volume.GetVolumeRange()
+def main():
+    sessions = AudioUtilities.GetAllSessions()
+    for session in sessions:
+        volume = session._ctl.QueryInterface(ISimpleAudioVolume)
+        if session.Process and session.Process.name() == "chrome.exe":
+            print(f"volume.GetMasterVolume(): {volume.GetMasterVolume()} and {session.Process.name()}")
+            volume.SetMasterVolume(1, None)       
 
 
-
-# volume.SetMasterVolumeLevel(5, None)
+if __name__ == "__main__":
+    main()
