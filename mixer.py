@@ -1,9 +1,12 @@
 from ctypes import cast, POINTER
 from comtypes import CLSCTX_ALL
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume, ISimpleAudioVolume
+from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume
 
-MAX = 5.0
-MIN = -60
+from tkinter import ttk
+
+
+MAX = 1
+MIN = .5
 
 def main():
     sessions = AudioUtilities.GetAllSessions()
@@ -11,7 +14,7 @@ def main():
         volume = session._ctl.QueryInterface(ISimpleAudioVolume)
         if session.Process and session.Process.name() == "chrome.exe":
             print(f"volume.GetMasterVolume(): {volume.GetMasterVolume()} and {session.Process.name()}")
-            volume.SetMasterVolume(1, None)       
+            volume.SetMasterVolume(MAX, None)       
 
 
 if __name__ == "__main__":
