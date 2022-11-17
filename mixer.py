@@ -1,3 +1,5 @@
+from ctypes import cast, POINTER
+from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume
 import tkinter as tk
 from tkinter import StringVar, ttk, DoubleVar
@@ -8,25 +10,27 @@ INTERVAL = 2000  # 2 seconds
 class WindowsAudioProcess:
     def __init__(self, name, frame) -> None:
         self.name = name
-        self.volume = DoubleVar()
+        self.volume = 1
         self.frame = frame
 
     def create_panel(self, x: int):
         name = ttk.Label(self.frame, text=self.name,foreground='white', background='black')
         name.grid(row=2, column=x)
 
-        scale = ttk.Scale(self.frame, from_=1, to=0, orient='vertical', variable=self.volume)
+        process_volume = DoubleVar(value=self.volume)
+        scale = ttk.Scale(self.frame, from_=1, to=0, orient='vertical', variable=process_volume, command=lambda x: self.set_volume(process_volume.get()))
         scale.grid(row=3, column=x, sticky="NEWS")
 
-        value = ttk.Label(self.frame, text=f"{self.volume.get():.2f}", foreground="red", font=("Arial", 15))
+        value = ttk.Label(self.frame, text=f"{self.volume:.2f}", foreground="red", font=("Arial", 15))
         value.grid(row=4, column=x)
 
-    def set_volume(self, volume: float):
+    def set_volume(self, volume):
         self.volume = volume
-
-    def get_volume(self) -> float:
-        return self.volume
-
+        sessions = AudioUtilities.GetAllSessions()
+        for session in sessions:
+            volume = session._ctl.QueryInterface(ISimpleAudioVolume)
+            if session.Process and session.Process.name() == self.name+".exe":
+                volume.SetMasterVolume(self.volume, None)
 
 class VolumeControllerApp:
     def __init__(self) -> None:
@@ -40,8 +44,7 @@ class VolumeControllerApp:
         self.mainframe.pack(fill='both', expand=True)
         self.process_names = self.create_process_list()
 
-        self.random = ttk.Label(
-            self.mainframe, text="", background='black', foreground='white', font=("Arial", 30))
+        self.random = ttk.Label(self.mainframe, text="", background='black', foreground='white', font=("Arial", 30))
         self.random.grid(row=0, column=0, sticky="NEWS")
 
         self.update()
@@ -60,8 +63,7 @@ class VolumeControllerApp:
 
     def create_process_list(self) -> None:
         for process in self.get_process_names():
-            self.processes.append(WindowsAudioProcess(
-                process.split('.')[0], self.mainframe))
+            self.processes.append(WindowsAudioProcess(process.split('.')[0], self.mainframe))
         return self.processes
 
     def get_process_names(self) -> list:
@@ -72,10 +74,10 @@ class VolumeControllerApp:
                 process_names.append(session.Process.name())
         return process_names
 
+    def get_sessions(self) -> list:
+        sessions = AudioUtilities.GetAllSessions()
+        return sessions
+
 
 if __name__ == "__main__":
     VolumeControllerApp()
-
-#     volume = session._ctl.QueryInterface(ISimpleAudioVolume)
-#         f"volume.GetMasterVolume(): {volume.GetMasterVolume()} and {type(session.Process.name())}")
-#     volume.SetMasterVolume(1, None)
