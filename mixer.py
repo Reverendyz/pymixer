@@ -1,5 +1,4 @@
 from ctypes import cast, POINTER
-from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume
 import tkinter as tk
 from tkinter import StringVar, ttk, DoubleVar
